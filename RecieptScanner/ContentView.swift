@@ -11,6 +11,8 @@ import SwiftData
 struct ContentView: View {
     @State private var showingImagePicker = false
     @State private var selectedImage: UIImage?
+    @State private var scannedText: String?
+    @State private var isScanning: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -20,6 +22,10 @@ struct ContentView: View {
                     .frame(height: 300)
                     .overlay(
                         VStack {
+                            if isScanning {
+                                ProgressView("Scanning receipt...")
+                                    .progressViewStyle(.circular)
+                            } else
                             if let image = selectedImage {
                                 Image(uiImage: image)
                                     .resizable()
@@ -50,18 +56,40 @@ struct ContentView: View {
                     .padding(.bottom, 8)
                 }
                 Spacer()
+                
+                if let text = scannedText {
+                    ScrollView {
+                        Text(text)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(height: 200)
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding()
+                }
+                Spacer()
             }
-                    .navigationTitle("Reciept Scanner")
-                    .sheet(isPresented: $showingImagePicker) {
-                        ImagePicker(image: $selectedImage)
-               }
+            .navigationTitle("Reciept Scanner")
+            .sheet(isPresented: $showingImagePicker) {
+                ImagePicker(image: $selectedImage)
+            }
+            .onChange(of: selectedImage) { _, newImage in
+                guard let image = newImage else { return }
+                isScanning = true
+                ReceiptScanner.scanReceipt(from: image) { text in
+                    DispatchQueue.main.async {
+                        scannedText = text
+                        isScanning = false
+                    }
+                    
+                }
             }
         }
     }
-
-
-    #Preview {
-        ContentView()
-            .modelContainer(for: Receipt.self, inMemory: true)
-    }
+}
+#Preview {
+    ContentView()
+        .modelContainer(for: Receipt.self, inMemory: true)
+}
 
