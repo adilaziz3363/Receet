@@ -11,6 +11,7 @@ import SwiftData
 struct ContentView: View {
     @State private var showingImagePicker = false
     @State private var selectedImage: UIImage?
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -19,29 +20,48 @@ struct ContentView: View {
                     .frame(height: 300)
                     .overlay(
                         VStack {
-                            Image(systemName: "doc.text.viewfinder")
-                                .font(.system(size: 50))
-                                .foregroundColor(.gray)
-                            Text("No reciept selected")
-                                .foregroundColor(.gray)
-                            Button("Select Reciept Photo") {
-                                showingImagePicker = true
+                            if let image = selectedImage {
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    .padding()
+                            } else {
+                                Image(systemName: "doc.text.viewfinder")
+                                    .font(.system(size: 50))
+                                    .foregroundColor(.gray)
+                                Text("No reciept selected")
+                                    .foregroundColor(.gray)
+                                Button("Select Reciept Photo") {
+                                    showingImagePicker = true
+                                    
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .padding()
                             }
-                            .buttonStyle(.borderedProminent)
-                            .padding()
                         }
                     )
                     .padding()
+                // Show button to re-pick if image already selected
+                if selectedImage != nil {
+                    Button("Choose Different Photo") {
+                        showingImagePicker = true
+                    }
+                    .padding(.bottom, 8)
+                }
                 Spacer()
             }
-            .navigationTitle("Reciept Scanner")
-            .sheet(isPresented: $showingImagePicker) {
-                Text("Photo picker will go here")
+                    .navigationTitle("Reciept Scanner")
+                    .sheet(isPresented: $showingImagePicker) {
+                        ImagePicker(image: $selectedImage)
+               }
             }
         }
     }
-}
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
-}
+
+
+    #Preview {
+        ContentView()
+            .modelContainer(for: Receipt.self, inMemory: true)
+    }
+
