@@ -21,7 +21,7 @@
             <Locations>
                <Location
                   uuid = "0A39F5D1-7844-4A1E-B33A-71C700192973 - 5e4bce2d3cf0f69b"
-                  shouldBeEnabled = "Yes"
+                  shouldBeEnabled = "No"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
                   symbolName = "RecieptScanner.ImagePicker.image.getter : Swift.Optional&lt;__C.UIImage&gt;"
@@ -35,7 +35,7 @@
                </Location>
                <Location
                   uuid = "0A39F5D1-7844-4A1E-B33A-71C700192973 - 36d9ccbd586a1ce7"
-                  shouldBeEnabled = "Yes"
+                  shouldBeEnabled = "No"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
                   symbolName = "RecieptScanner.ImagePicker.image.setter : Swift.Optional&lt;__C.UIImage&gt;"
@@ -48,25 +48,25 @@
                   endingLineNumber = "0">
                </Location>
                <Location
-                  uuid = "0A39F5D1-7844-4A1E-B33A-71C700192973 - fe0e4a8e1046785b"
-                  shouldBeEnabled = "Yes"
+                  uuid = "0A39F5D1-7844-4A1E-B33A-71C700192973 - 785799519ea1e97f"
+                  shouldBeEnabled = "No"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "RecieptScanner.ImagePicker.image.modify : Swift.Optional&lt;__C.UIImage&gt;"
+                  symbolName = "RecieptScanner.ImagePicker.$image.getter : SwiftUI.Binding&lt;Swift.Optional&lt;__C.UIImage&gt;&gt;"
                   moduleName = "RecieptScanner.debug.dylib"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/delirious/Desktop/IOS_DEV/RecieptScanner/RecieptScanner/ImagePicker.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "5"
-                  endingLineNumber = "5">
+                  startingLineNumber = "0"
+                  endingLineNumber = "0">
                </Location>
                <Location
-                  uuid = "0A39F5D1-7844-4A1E-B33A-71C700192973 - 785799519ea1e97f"
+                  uuid = "0A39F5D1-7844-4A1E-B33A-71C700192973 - fe0e4a8e10467ff4"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "RecieptScanner.ImagePicker.$image.getter : SwiftUI.Binding&lt;Swift.Optional&lt;__C.UIImage&gt;&gt;"
+                  symbolName = "RecieptScanner.ImagePicker.image.modify : Swift.Optional&lt;__C.UIImage&gt;"
                   moduleName = "RecieptScanner.debug.dylib"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/delirious/Desktop/IOS_DEV/RecieptScanner/RecieptScanner/ImagePicker.swift"

@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var selectedImage: UIImage?
     @State private var scannedText: String?
     @State private var isScanning: Bool = false
+    @State private var parsedReceipt: ParsedReceipt?
     
     var body: some View {
         NavigationStack {
@@ -62,32 +63,57 @@ struct ContentView: View {
                         Text(text)
                             .padding()
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .textSelection(.enabled)
                     }
                     .frame(height: 200)
                     .background(Color.gray.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .padding()
-                }
-                Spacer()
-            }
-            .navigationTitle("Reciept Scanner")
-            .sheet(isPresented: $showingImagePicker) {
-                ImagePicker(image: $selectedImage)
-            }
-            .onChange(of: selectedImage) { _, newImage in
-                guard let image = newImage else { return }
-                isScanning = true
-                ReceiptScanner.scanReceipt(from: image) { text in
-                    DispatchQueue.main.async {
-                        scannedText = text
-                        isScanning = false
                     }
-                    
+                
+                    if let parsed = parsedReceipt {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("📍Merchant: \(parsed.merchantName)")
+                            Text("💰Total: $\(String(format: "%.2f", parsed.total))")
+                            if let date = parsed.date {
+                                Text("📅 Date: \(date.formatted(date: .abbreviated, time: .omitted))")
+                            }
+                        }
+                        
+                        .padding()
+                        .frame(height: 200)
+                        .background(Color.gray.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding()
+                    }
+                    Spacer()
                 }
+            
+                    .navigationTitle("Reciept Scanner")
+                    .sheet(isPresented: $showingImagePicker) {
+                        ImagePicker(image: $selectedImage)
+                    }
+                    .onChange(of: selectedImage) { _, newImage in
+                        guard let image = newImage else { return }
+                        isScanning = true
+                        ReceiptScanner.scanReceipt(from: image) { text in
+                            DispatchQueue.main.async {
+                                scannedText = text
+                                if let text  = text {
+                                    parsedReceipt = ReceiptParser.parse(from: text)
+                                    print("Merchant: \(parsedReceipt?.merchantName ?? "nil")")
+                                    print("Total: \(parsedReceipt?.total ?? 0.0)")
+                                    print("Date: \(String(describing: parsedReceipt?.date))")
+                                }
+                                isScanning = false
+                            }
+                            
+                        }
+                    }
             }
         }
     }
-}
+
 #Preview {
     ContentView()
         .modelContainer(for: Receipt.self, inMemory: true)
