@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict/>
+<dict>
+    <!-- For photo library read access -->
+        <key>NSPhotoLibraryUsageDescription</key>
+        <string>We need access to your photos to scan receipts.</string>
+
+        <!-- For camera -->
+        <key>NSCameraUsageDescription</key>
+        <string>We need camera access to capture receipts.</string>
+
+        <!-- If saving photos back -->
+        <key>NSPhotoLibraryAddUsageDescription</key>
+        <string>We save scanned receipts to your photo library.</string>
+</dict>
 </plist>

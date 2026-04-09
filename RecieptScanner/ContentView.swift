@@ -9,25 +9,26 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext: ModelContext
+    @State private var viewModel = ReceiptViewModel()
+    
+    // Picker states
     @State private var showingImagePicker = false
-    @State private var selectedImage: UIImage?
-    @State private var scannedText: String?
-    @State private var isScanning: Bool = false
-    @State private var parsedReceipt: ParsedReceipt?
+    @State private var useCamera = false
     
     var body: some View {
         NavigationStack {
             VStack {
+                // Receipt Image Area
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.gray.opacity(0.2))
                     .frame(height: 300)
-                    .overlay(
+                    .overlay {
                         VStack {
-                            if isScanning {
+                            if viewModel.isScanning {
                                 ProgressView("Scanning receipt...")
                                     .progressViewStyle(.circular)
-                            } else
-                            if let image = selectedImage {
+                            } else if let image = viewModel.selectedImage {
                                 Image(uiImage: image)
                                     .resizable()
                                     .scaledToFit()
@@ -37,28 +38,49 @@ struct ContentView: View {
                                 Image(systemName: "doc.text.viewfinder")
                                     .font(.system(size: 50))
                                     .foregroundColor(.gray)
-                                Text("No reciept selected")
+                                Text("No receipt selected")
                                     .foregroundColor(.gray)
-                                Button("Select Reciept Photo") {
-                                    showingImagePicker = true
+                                HStack(spacing: 16) {
+                                    Button("Take Photo") {
+                                        useCamera = true
+                                        showingImagePicker = true
+                                    }
+                                    .buttonStyle(.borderedProminent)
                                     
+                                    Button("Choose from Library") {
+                                        useCamera = false
+                                        showingImagePicker = true
+                                    }
+                                    .buttonStyle(.borderedProminent)
                                 }
-                                .buttonStyle(.borderedProminent)
                                 .padding()
                             }
                         }
-                    )
+                    }
                     .padding()
-                // Show button to re-pick if image already selected
-                if selectedImage != nil {
-                    Button("Choose Different Photo") {
-                        showingImagePicker = true
+                
+                // Re-pick if image already selected
+                if viewModel.selectedImage != nil {
+                    HStack(spacing: 16) {
+                        Button("Take Photo") {
+                            useCamera = true
+                            showingImagePicker = true
+                        }
+                        .buttonStyle(.borderedProminent)
+                        
+                        Button("Choose Different Photo") {
+                            useCamera = false
+                            showingImagePicker = true
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
                     .padding(.bottom, 8)
                 }
+                
                 Spacer()
                 
-                if let text = scannedText {
+                // Scanned Text Display
+                if let text = viewModel.scannedText {
                     ScrollView {
                         Text(text)
                             .padding()
@@ -69,53 +91,54 @@ struct ContentView: View {
                     .background(Color.gray.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .padding()
-                    }
-                
-                    if let parsed = parsedReceipt {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("📍Merchant: \(parsed.merchantName)")
-                            Text("💰Total: $\(String(format: "%.2f", parsed.total))")
-                            if let date = parsed.date {
-                                Text("📅 Date: \(date.formatted(date: .abbreviated, time: .omitted))")
-                            }
-                        }
-                        
-                        .padding()
-                        .frame(height: 200)
-                        .background(Color.gray.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .padding()
-                    }
-                    Spacer()
                 }
-            
-                    .navigationTitle("Reciept Scanner")
-                    .sheet(isPresented: $showingImagePicker) {
-                        ImagePicker(image: $selectedImage)
-                    }
-                    .onChange(of: selectedImage) { _, newImage in
-                        guard let image = newImage else { return }
-                        isScanning = true
-                        ReceiptScanner.scanReceipt(from: image) { text in
-                            DispatchQueue.main.async {
-                                scannedText = text
-                                if let text  = text {
-                                    parsedReceipt = ReceiptParser.parse(from: text)
-                                    print("Merchant: \(parsedReceipt?.merchantName ?? "nil")")
-                                    print("Total: \(parsedReceipt?.total ?? 0.0)")
-                                    print("Date: \(String(describing: parsedReceipt?.date))")
-                                }
-                                isScanning = false
-                            }
-                            
+                
+                // Parsed Receipt Display
+                if let parsed = viewModel.parsedReceipt {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("📍Merchant: \(parsed.merchantName)")
+                        Text("💰Total: $\(String(format: "%.2f", parsed.total))")
+                        if let date = parsed.date {
+                            Text("📅 Date: \(date.formatted(date: .abbreviated, time: .omitted))")
                         }
                     }
+                    .padding()
+                    .frame(height: 200)
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding()
+                }
+                
+                // Save Button
+                if viewModel.parsedReceipt != nil {
+                    Button {
+                        viewModel.saveReceipt(context: modelContext)
+                    } label: {
+                        Label("Save Receipt", systemImage: "square.and.arrow.down")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .padding(.bottom, 8)
+                }
+                
+                Spacer()
+            }
+            .navigationTitle("Receipt Scanner")
+            .sheet(isPresented: $showingImagePicker) {
+                if useCamera {
+                    CameraPicker(image: $viewModel.selectedImage, sourceType: .camera)
+                } else {
+                    ImagePicker(image: $viewModel.selectedImage)
+                }
+            }
+            .onChange(of: viewModel.selectedImage) { _, newImage in
+                guard newImage != nil else { return }
+                viewModel.scanReceipt()
             }
         }
     }
+}
 
 #Preview {
     ContentView()
         .modelContainer(for: Receipt.self, inMemory: true)
 }
-
