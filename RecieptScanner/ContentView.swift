@@ -97,7 +97,7 @@ struct ContentView: View {
                 if let parsed = viewModel.parsedReceipt {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("📍Merchant: \(parsed.merchantName)")
-                        Text("💰Total: $\(String(format: "%.2f", parsed.total))")
+                        Text("💰Total: $\(String(format: "%.2f", parsed.total ?? 0.0))")
                         if let date = parsed.date {
                             Text("📅 Date: \(date.formatted(date: .abbreviated, time: .omitted))")
                         }
@@ -131,7 +131,8 @@ struct ContentView: View {
                 }
             }
             .onChange(of: viewModel.selectedImage) { _, newImage in
-                guard newImage != nil else { return }
+                guard let newImage = newImage else { return }
+                viewModel.selectedImage = newImage
                 viewModel.scanReceipt()
             }
         }

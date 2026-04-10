@@ -2,8 +2,9 @@ import Foundation
 
 struct ParsedReceipt {
     var merchantName: String
-    var total: Double
+    var total: Double?
     var date: Date?
+    var rawText: String
 }
 
 struct ReceiptParser {
@@ -12,10 +13,10 @@ struct ReceiptParser {
         let merchantName = extractMerchantName(from: text)
         let total = extractTotal(from: text)
         let date = extractDate(from: text)
-        return ParsedReceipt(merchantName: merchantName, total: total, date: date)
+        return ParsedReceipt(merchantName: merchantName, total: total, date: date, rawText: text)
     }
 
-    static func extractTotal(from text: String) -> Double {
+    static func extractTotal(from text: String) -> Double? {
         let lines = text.components(separatedBy: "\n")
         
         let totalKeywords = ["total amount", "grand total", "total due",
@@ -67,7 +68,7 @@ struct ReceiptParser {
         for line in lines {
             if let value = extractNumber(from: line), value > largest { largest = value }
         }
-        return largest
+        return largest > 0 ? largest : nil
     }
 
     static func extractMerchantName(from text: String) -> String {
@@ -75,27 +76,45 @@ struct ReceiptParser {
         let skipWords = ["welcome", "thank", "receipt", "order", "date",
                          "time", "item", "qty", "price", "total", "cash",
                          "change", "card", "tel", "www", "http"]
-        for line in lines {
+        // Take first 5 lines only - merchant name is almost always at the top
+        let topLines = lines.prefix(5)
+        
+        for line in topLines {
             let cleaned = line.trimmingCharacters(in: .whitespaces)
             let lowercased = cleaned.lowercased()
             guard !cleaned.isEmpty,
                   cleaned.count > 3,
+                  !cleaned.allSatisfy({ $0.isNumber || $0 == "." || $0 == "-"}), // skip pure numbers
                   !skipWords.contains(where: { lowercased.contains($0) })
             else { continue }
             return cleaned
         }
         return "Unknown Merchant"
     }
+    // MARK: - Date
 
     static func extractDate(from text: String) -> Date? {
         let lines = text.components(separatedBy: "\n")
+        
         let datePatterns = [
-            #"\d{2}/\d{2}/\d{4}"#,
-            #"\d{2}-\d{2}-\d{4}"#,
-            #"\d{4}-\d{2}-\d{2}"#,
+            #"\d{2}/\d{2}/\d{4}"#, // MM/dd/yyyy
+            #"\d{2}-\d{2}-\d{4}"#,  // MM-dd-yyyy
+            #"\d{4}-\d{2}-\d{2}"#,  // yyyy-MM-dd
+            #"\d{2}/\d{2}/\d{2}"#,  // MM/dd/yy
+            #"\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}"#,    // 12 January 2024
+            #"[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4}"#   // January 12, 2024
+        ]
+        let formats = [
+            "MM/dd/yyyy",
+            "MM-dd-yyyy",
+            "yyyy-MM-dd",
+            "MM/dd/yy",
+            "dd MMMM yyyy",
+            "MMMM dd, yyyy"
         ]
         let formatter = DateFormatter()
-        let formats = ["MM/dd/yyyy", "MM-dd-yyyy", "yyyy-MM-dd"]
+        formatter.locale = Locale(identifier: "en_US_POSIX") // prevents locale-based failures
+        
         for line in lines {
             for (index, pattern) in datePatterns.enumerated() {
                 if let range = line.range(of: pattern, options: .regularExpression) {

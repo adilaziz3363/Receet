@@ -9,17 +9,26 @@ import SwiftUI
 import SwiftData
 
 @main
-struct RecieptScannerApp: App {
+struct ReceiptScannerApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Receipt.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let config = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false
+            )
+            return try ModelContainer(for: schema, configurations: [config])
+
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            print("SwiftData error: \(error)")
+            let fallbackConfig = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: true
+            )
+            return try! ModelContainer(for: schema, configurations: [fallbackConfig])
         }
     }()
 
